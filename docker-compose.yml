@@ -1,0 +1,9 @@
+version: "3"
+services:
+  health-monitor:
+    container_name: proctor-health-monitor
+    build: .
+    ports:
+      - "3090:3090"
+    env_file:
+      - .env

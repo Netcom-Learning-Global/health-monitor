@@ -1,0 +1,27 @@
+{
+  "name": "proctor-health-monitor",
+  "version": "1.0.0",
+  "description": "Centralized health monitoring for Proctor 365 microservices",
+  "scripts": {
+    "dev": "nodemon ./bin/www",
+    "start": "node ./bin/www"
+  },
+  "imports": {
+    "#src/*": "./src/*.js",
+    "#any/*": "./*",
+    "#root/*": "./*.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "helmet": "^7.1.0",
+    "ioredis": "^5.4.2",
+    "node-redis-retry-strategy": "^2.0.0",
+    "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
