@@ -38,7 +38,7 @@ const services = [
 		id: "io-handler",
 		name: "Proctoring IO Handler",
 		url: process.env.IO_HANDLER_URL || "http://localhost:3010",
-		path: "/healthz",
+		path: "/health/healthz",
 		critical: true,
 	},
 	{
