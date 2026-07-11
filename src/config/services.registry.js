@@ -51,14 +51,16 @@ const services = [
 	{
 		id: "admin-portal",
 		name: "Admin Portal",
-		url: process.env.ADMIN_PORTAL_URL || "http://localhost:4012",
+		url: process.env.ADMIN_PORTAL_URL || "http://localhost:3002",
+		// Next.js API route — /health rewrite is blocked by nginx on DEV
 		path: "/health/healthz",
 		critical: true,
 	},
 	{
 		id: "candidate-portal",
 		name: "Candidate Portal",
-		url: process.env.CANDIDATE_PORTAL_URL || "http://localhost:4005",
+		url: process.env.CANDIDATE_PORTAL_URL || "http://localhost:3001",
+		// Next.js API route — /health rewrite is blocked by nginx on DEV
 		path: "/health/healthz",
 		critical: true,
 	},

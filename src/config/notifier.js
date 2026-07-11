@@ -3,6 +3,14 @@ const logger = require("#src/config/logging/winston");
 const { isEmailConfigured, sendAlertEmail } = require("#src/config/email");
 const { buildHealthAlertEmail } = require("#src/config/emailTemplates");
 
+// Collect DOWN events across polls, then send one merged email.
+const EMAIL_BATCH_WINDOW_MS = Number(
+	process.env.ALERT_EMAIL_BATCH_WINDOW_MS || 30000
+);
+
+const pendingDownByServiceId = new Map();
+let batchTimer = null;
+
 function buildTransitionMessage(transition) {
 	return `[Proctor Health] ${transition.serviceName} changed ${transition.from} -> ${transition.to} at ${transition.at}`;
 }
@@ -21,7 +29,12 @@ async function notifySlack(transition, text) {
 	}
 }
 
-async function notifyDownEmail(downTransitions) {
+async function flushDownEmailBatch() {
+	batchTimer = null;
+
+	const downTransitions = Array.from(pendingDownByServiceId.values());
+	pendingDownByServiceId.clear();
+
 	if (!isEmailConfigured() || !downTransitions.length) return;
 
 	const { subject, text, html } = buildHealthAlertEmail(downTransitions);
@@ -42,6 +55,56 @@ async function notifyDownEmail(downTransitions) {
 	}
 }
 
+function scheduleDownEmailBatch() {
+	if (batchTimer) return;
+
+	logger.info(
+		`Email batch window started (${EMAIL_BATCH_WINDOW_MS}ms) — waiting for more DOWN events`
+	);
+
+	batchTimer = setTimeout(() => {
+		flushDownEmailBatch().catch((err) => {
+			logger.error(`Failed to flush email batch: ${err.message}`);
+		});
+	}, EMAIL_BATCH_WINDOW_MS);
+
+	if (typeof batchTimer.unref === "function") {
+		batchTimer.unref();
+	}
+}
+
+function queueDownTransitions(downTransitions) {
+	if (!isEmailConfigured() || !downTransitions.length) return;
+
+	for (const transition of downTransitions) {
+		pendingDownByServiceId.set(transition.serviceId, transition);
+	}
+
+	logger.info(
+		`Queued ${downTransitions.length} DOWN alert(s); pending total=${pendingDownByServiceId.size}`
+	);
+
+	scheduleDownEmailBatch();
+}
+
+function clearRecoveredFromPending(upTransitions) {
+	if (!upTransitions.length || !pendingDownByServiceId.size) return;
+
+	for (const transition of upTransitions) {
+		if (pendingDownByServiceId.delete(transition.serviceId)) {
+			logger.info(
+				`Removed ${transition.serviceName} from pending email batch (recovered before send)`
+			);
+		}
+	}
+
+	if (!pendingDownByServiceId.size && batchTimer) {
+		clearTimeout(batchTimer);
+		batchTimer = null;
+		logger.info("Email batch cancelled — no remaining DOWN services");
+	}
+}
+
 async function notifyTransitions(transitions) {
 	if (!transitions.length) return;
 
@@ -51,9 +114,11 @@ async function notifyTransitions(transitions) {
 		await notifySlack(transition, text);
 	}
 
-	// Email only for DOWN — never for recovery/UP
 	const downTransitions = transitions.filter((t) => t.to === "DOWN");
-	await notifyDownEmail(downTransitions);
+	const upTransitions = transitions.filter((t) => t.to === "UP");
+
+	clearRecoveredFromPending(upTransitions);
+	queueDownTransitions(downTransitions);
 }
 
 module.exports = { notifyTransitions };
