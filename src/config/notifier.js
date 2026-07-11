@@ -29,8 +29,14 @@ async function notifySlack(transition, text) {
 	}
 }
 
-async function flushDownEmailBatch() {
+function clearBatchTimer() {
+	if (!batchTimer) return;
+	clearTimeout(batchTimer);
 	batchTimer = null;
+}
+
+async function flushDownEmailBatch() {
+	clearBatchTimer();
 
 	const downTransitions = Array.from(pendingDownByServiceId.values());
 	pendingDownByServiceId.clear();
@@ -56,10 +62,13 @@ async function flushDownEmailBatch() {
 }
 
 function scheduleDownEmailBatch() {
-	if (batchTimer) return;
+	// Sliding window: every new DOWN resets the wait so one-by-one stops still merge.
+	clearBatchTimer();
 
 	logger.info(
-		`Email batch window started (${EMAIL_BATCH_WINDOW_MS}ms) — waiting for more DOWN events`
+		`Email batch window armed (${EMAIL_BATCH_WINDOW_MS}ms); pending=[${Array.from(
+			pendingDownByServiceId.keys()
+		).join(", ")}]`
 	);
 
 	batchTimer = setTimeout(() => {
@@ -84,6 +93,14 @@ function queueDownTransitions(downTransitions) {
 		`Queued ${downTransitions.length} DOWN alert(s); pending total=${pendingDownByServiceId.size}`
 	);
 
+	// Same poll with 2+ downs → send one merged email immediately (no wait).
+	if (downTransitions.length > 1 || pendingDownByServiceId.size > 1) {
+		flushDownEmailBatch().catch((err) => {
+			logger.error(`Failed to flush multi-DOWN email: ${err.message}`);
+		});
+		return;
+	}
+
 	scheduleDownEmailBatch();
 }
 
@@ -98,9 +115,8 @@ function clearRecoveredFromPending(upTransitions) {
 		}
 	}
 
-	if (!pendingDownByServiceId.size && batchTimer) {
-		clearTimeout(batchTimer);
-		batchTimer = null;
+	if (!pendingDownByServiceId.size) {
+		clearBatchTimer();
 		logger.info("Email batch cancelled — no remaining DOWN services");
 	}
 }
