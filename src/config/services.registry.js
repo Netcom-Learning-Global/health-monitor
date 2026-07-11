@@ -48,6 +48,20 @@ const services = [
 		path: "/health/healthz",
 		critical: true,
 	},
+	{
+		id: "admin-portal",
+		name: "Admin Portal",
+		url: process.env.ADMIN_PORTAL_URL || "http://localhost:4012",
+		path: "/health/healthz",
+		critical: true,
+	},
+	{
+		id: "candidate-portal",
+		name: "Candidate Portal",
+		url: process.env.CANDIDATE_PORTAL_URL || "http://localhost:4005",
+		path: "/health/healthz",
+		critical: true,
+	},
 ];
 
 module.exports = {
