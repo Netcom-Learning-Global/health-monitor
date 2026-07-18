@@ -64,6 +64,20 @@ const services = [
 		path: "/health/healthz",
 		critical: true,
 	},
+	{
+		id: "video-service",
+		name: "Proctoring Video Processing",
+		url: process.env.VIDEO_SERVICE_URL,
+		path: "/health",
+		critical: true,
+	},
+	{
+		id: "audio-service",
+		name: "Proctoring Audio Service",
+		url: process.env.AUDIO_SERVICE_URL,
+		path: "/health",
+		critical: true,
+	},
 ];
 
 module.exports = {
