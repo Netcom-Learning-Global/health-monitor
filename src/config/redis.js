@@ -64,5 +64,6 @@ module.exports = {
 	initRedis,
 	getCachedHealth,
 	setCachedHealth,
-	REDIS_HEALTH_KEY: "proctor:system:health",
+	// Namespace by env so local/dev/prod writers don't overwrite each other
+	REDIS_HEALTH_KEY: `proctor:system:health:${process.env.NODE_ENV || "development"}`,
 };

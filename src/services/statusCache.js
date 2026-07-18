@@ -25,6 +25,9 @@ function detectTransitions(previous, current, services) {
 				to: currStatus,
 				critical: service.critical,
 				at: new Date().toISOString(),
+				url: current[service.id]?.url || null,
+				error: current[service.id]?.error || null,
+				httpStatus: current[service.id]?.httpStatus || null,
 			});
 		}
 	}
