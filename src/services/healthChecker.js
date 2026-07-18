@@ -68,7 +68,11 @@ async function checkServiceWithRetry(service, retryConfig) {
 				bodyStatus ? `Service status ${bodyStatus}` : `HTTP ${response.status}`
 			);
 		} catch (err) {
-			lastError = err;
+			lastError = new Error(
+				err.code
+					? `${err.code}: ${err.message}`
+					: err.message || "unknown error"
+			);
 		}
 
 		if (attempt < attempts) {
