@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: proctor-health-monitor
+  namespace: staging
+spec:
+  type: LoadBalancer
+  selector:
+    app: proctor-health-monitor
+  ports:
+    - port: 3090
+      targetPort: 3090

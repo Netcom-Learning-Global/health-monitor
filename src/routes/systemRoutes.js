@@ -117,7 +117,22 @@ router.get("/services", async (_req, res) => {
 	});
 });
 
-router.post("/check-now", async (_req, res) => {
+router.post("/check-now", async (req, res) => {
+	const expectedKey = process.env.HEALTH_CHECK_API_KEY;
+	if (expectedKey) {
+		const providedKey =
+			req.headers["x-health-check-key"] ||
+			req.headers["x-api-key"] ||
+			req.query.key;
+		if (providedKey !== expectedKey) {
+			return res.status(401).json({
+				success: false,
+				status: 401,
+				message_code: "UNAUTHORIZED",
+			});
+		}
+	}
+
 	const payload = await runHealthCheck();
 	const downServices = getDownServices(payload);
 	const statusCode = payload.overall === "UP" ? 200 : 503;

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proctor-health-monitor
+  namespace: staging
+  labels:
+    app: proctor-health-monitor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: proctor-health-monitor
+  template:
+    metadata:
+      labels:
+        app: proctor-health-monitor
+    spec:
+      nodeSelector:
+        agentpool: amd64pool
+      imagePullSecrets:
+        - name: my-docker-secret
+      containers:
+        - name: proctor-health-monitor
+          image: netcomlearningny/proctor-health-monitor:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3090
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

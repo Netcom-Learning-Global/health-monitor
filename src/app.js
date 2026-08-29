@@ -5,7 +5,7 @@ const systemRoutes = require("#src/routes/systemRoutes");
 
 const app = express();
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "*")
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
 	.split(",")
 	.map((origin) => origin.trim())
 	.filter(Boolean);
