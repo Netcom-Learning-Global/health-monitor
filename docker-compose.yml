@@ -2,8 +2,14 @@ version: "3"
 services:
   health-monitor:
     container_name: proctor-health-monitor
+    restart: unless-stopped
     build: .
     ports:
       - "3090:3090"
     env_file:
       - .env
+    logging:
+        driver: json-file
+        options:
+            max-size: "20m"
+            max-file: "3"
