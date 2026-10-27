@@ -2,7 +2,6 @@ const sgMail = require("@sendgrid/mail");
 const logger = require("#src/config/logging/winston");
 
 let apiKeyConfigured = false;
-
 function isEmailConfigured() {
 	return Boolean(
 		process.env.ALERT_EMAIL_ENABLED === "true" &&
@@ -11,7 +10,6 @@ function isEmailConfigured() {
 			process.env.ALERT_EMAIL_TO
 	);
 }
-
 function ensureSendGrid() {
 	if (!isEmailConfigured()) return false;
 	if (!apiKeyConfigured) {
